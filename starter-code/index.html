@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/favicon-32x32.png">
+  <link href="styles.css" rel="stylesheet">
+  <title>Frontend Mentor | Password generator app</title>
+</head>
+<body>
+  <main>
+    <h1>Password Generator</h1>
+
+    <div id="generated-password">
+      <div id="display-password">P4$5W0rD!</div>
+      <div id="copy-icon-box">
+        <div id="copied-text" class="dnone">COPIED</div>
+        <svg width="21" height="24" xmlns="http://www.w3.org/2000/svg"><path d="M20.341 3.091 17.909.659A2.25 2.25 0 0 0 16.319 0H8.25A2.25 2.25 0 0 0 6 2.25V4.5H2.25A2.25 2.25 0 0 0 0 6.75v15A2.25 2.25 0 0 0 2.25 24h10.5A2.25 2.25 0 0 0 15 21.75V19.5h3.75A2.25 2.25 0 0 0 21 17.25V4.682a2.25 2.25 0 0 0-.659-1.591ZM12.469 21.75H2.53a.281.281 0 0 1-.281-.281V7.03a.281.281 0 0 1 .281-.281H6v10.5a2.25 2.25 0 0 0 2.25 2.25h4.5v1.969a.282.282 0 0 1-.281.281Zm6-4.5H8.53a.281.281 0 0 1-.281-.281V2.53a.281.281 0 0 1 .281-.281H13.5v4.125c0 .621.504 1.125 1.125 1.125h4.125v9.469a.282.282 0 0 1-.281.281Zm.281-12h-3v-3h.451c.075 0 .147.03.2.082L18.667 4.6a.283.283 0 0 1 .082.199v.451Z" id="copy-icon"/></svg></div>
+      </div><!-- generated-password -->
+
+      <div id="password-generator">
+       <div id="flex-character-length">
+        <label for="character-length">Character Length</label>
+        <div id="character-length-display">10</div>
+      </div><!-- flex-character-length -->
+
+      <input type="range" id="character-length" min="1" max="20" value="10" oninput="updateSlider(this)">
+
+      <div class="flex-checkbox">
+        <input type="checkbox" id="include-uppercase" value="true" checked> <label for="include-uppercase">Include Uppercase Letters</label>
+      </div><!-- flex-checkbox --> 
+
+      <div class="flex-checkbox">
+        <input type="checkbox" id="include-lowercase" value="true" checked> <label for="include-lowercase">Include Lowercase Letters</label>
+      </div><!-- flex-checkbox -->
+
+      <div class="flex-checkbox">
+        <input type="checkbox" id="include-numbers" value="true" checked> <label for="include-numbers">Include Numbers</label>
+      </div><!-- flex-checkbox -->
+
+      <div class="flex-checkbox">
+        <input type="checkbox" id="include-symbols" value="false"> <label for="include-symbols">Include Symbols</label>
+      </div><!-- flex-checkbox -->
+
+      <div id="required-message" class="dnone">
+        Select at least on filter
+      </div><!-- required-message -->
+
+      <div id="show-strength-box">
+        <div>
+          STRENGTH
+        </div>
+        <div id="strength" class="medium">
+          <span id="strength-name">MEDIUM</span>
+          <div class="bar active-bar"></div><!-- bar -->
+          <div class="bar active-bar"></div><!-- bar -->
+          <div class="bar active-bar"></div><!-- bar -->
+          <div class="bar"></div><!-- bar -->
+        </div><!-- strength -->
+      </div><!-- show-strength-box -->
+
+      <div id="generate-box" onclick="generatePassword()">
+        Generate <svg width="12" height="12" xmlns="http://www.w3.org/2000/svg"><path d="m5.106 12 6-6-6-6-1.265 1.265 3.841 3.84H.001v1.79h7.681l-3.841 3.84z" id="arrow-icon" /></svg>
+      </div><!-- generate-box -->
+    </div><!-- password-generator -->
+  </main>
+</body>
+<script>
+  var characterLength = 10;
+  var uppercase, lowercase, include, symbols, password;
+  let charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const characterLengthDisplay = document.getElementById("character-length-display");
+  const checkboxArray = document.querySelectorAll('input[type="checkbox"]');
+  const charsetArray = ["ABCDEFGHIJKLMNOPQRSTUVWXYZ", "abcdefghijklmnopqrstuvwxyz", "0123456789", "!#$%&'()*+,-./:;<=>?@[\]^_`{|}~"];
+  const barArray = document.querySelectorAll(".bar");
+  const displayPassword = document.getElementById("display-password");
+  const copy = document.getElementById("copy-icon-box");
+  const copyIcon = document.getElementById("copy-icon");
+  const copiedText = document.getElementById("copied-text");
+  const required = document.getElementById("required-message");
+  const strengthName = document.getElementById("strength-name");
+  copy.addEventListener("click", copyToClipboard);
+
+  for (i = 0; i < checkboxArray.length; i++) {
+    checkboxArray[i].addEventListener("click", setValue);
+  }
+  function setValue() {
+    event.target.value = event.target.checked ? true : false;
+    createCharset();
+    validateStrength();
+  }
+  function updateSlider(slider) {
+    const value = (slider.value - slider.min) / (slider.max - slider.min) * 100;
+    slider.style.background = `linear-gradient(90deg, var(--green) ${value}%, var(--dark) ${value}%)`;
+    characterLength = event.target.value;
+    characterLengthDisplay.innerHTML = characterLength;
+    validateStrength();
+    createCharset();
+  }
+  function generatePassword() {
+    if (!checkFilter()) {
+      return;
+    }
+
+    copyIcon.style.fill = "var(--white)";
+    copiedText.classList.remove("dblock");
+    password = "";
+    for (i = 0, n = charset.length; i < characterLength; ++i) {
+      password += charset.charAt(Math.floor(Math.random() * n));
+    }
+    displayPassword.innerHTML = password;
+    displayPassword.style.color ="var(--white)"
+
+  }
+  function createCharset() {
+    charset = "";
+    checkboxArray.forEach((item, index) => {
+      if (item.checked === true) {
+        charset += charsetArray[index]
+      } 
+    } 
+    )
+  }
+  function copyToClipboard() {
+   copiedText.classList.add("dblock")
+   copyIcon.style.fill = "var(--green)"
+   navigator.clipboard.writeText(password);
+ }
+ function checkFilter() {
+  if (charset == "") {
+    required.classList.add("dblock");
+    return false;
+  } else {
+    required.classList.remove("dblock");
+    return true;
+  }
+}
+function validateStrength() {
+  let strength;
+  let checkBoxAmount = 0;
+  checkboxArray.forEach(item => {
+    if (item.checked) {
+      checkBoxAmount = checkBoxAmount + 1;
+    }
+  })
+
+  strength = characterLength * checkBoxAmount;
+
+  barArray.forEach(item => item.style.backgroundColor = "var(--dark)")
+  barArray.forEach(item => item.classList.remove("active-bar"))
+
+  switch (true) {
+  case (strength >= 0 && strength <= 19):
+      // Strength zwischen 10 und 19
+    for (let i = 0; i < 1; i++) {
+      barArray[i].classList.add("active-bar");
+      barArray[i].style.backgroundColor = "var(--red)";
+      strengthName.innerHTML = "too weak!";
+    }
+    break;
+  case (strength >= 20 && strength <= 29):
+      // Strength zwischen 20 und 29
+    for (let i = 0; i < 2; i++) {
+      barArray[i].classList.add("active-bar");
+      barArray[i].style.backgroundColor = "var(--orange)";
+      strengthName.innerHTML = "weak";
+    }
+    break;
+  case (strength >= 30 && strength <= 59):
+      // Strength zwischen 30 und 39
+    for (let i = 0; i < 3; i++) {
+      barArray[i].classList.add("active-bar");
+      barArray[i].style.backgroundColor = "var(--yellow)";
+      strengthName.innerHTML = "medium";
+    }
+    break;
+  case (strength >= 60):
+      // Strength über 40
+    for (let i = 0; i < 4; i++) {
+      barArray[i].classList.add("active-bar");
+      barArray[i].style.backgroundColor = "var(--green)";
+      strengthName.innerHTML = "strong";
+    }
+    break;
+  }
+}
+</script>
+</html>
